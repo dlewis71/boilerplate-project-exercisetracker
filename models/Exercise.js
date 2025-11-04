@@ -7,4 +7,5 @@ const exerciseSchema = new mongoose.Schema({
   date: { type: Date, required: true }
 });
 
-module.exports = mongoose.model('Exercise', exerciseSchema);
+// This line avoids OverwriteModelError:
+module.exports = mongoose.models.Exercise || mongoose.model('Exercise', exerciseSchema);
