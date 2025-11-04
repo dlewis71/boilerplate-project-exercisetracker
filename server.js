@@ -1,23 +1,24 @@
-
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+// Models
 const User = require('./models/User');
 const Exercise = require('./models/Exercise');
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/exercise-tracker', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// Connect to local MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected locally!'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Root route
 app.get('/', (req, res) => {
@@ -27,8 +28,6 @@ app.get('/', (req, res) => {
 /** ----------------------
  * Users Routes
  * ---------------------*/
-
-// Create a new user
 app.post('/api/users', async (req, res) => {
   try {
     const { username } = req.body;
@@ -40,7 +39,6 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-// Get all users
 app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find({});
@@ -53,8 +51,6 @@ app.get('/api/users', async (req, res) => {
 /** ----------------------
  * Exercises Routes
  * ---------------------*/
-
-// Add exercise for a user
 app.post('/api/users/:_id/exercises', async (req, res) => {
   try {
     const { description, duration, date } = req.body;
@@ -82,7 +78,6 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   }
 });
 
-// Get exercise logs
 app.get('/api/users/:_id/logs', async (req, res) => {
   try {
     const { from, to, limit } = req.query;
@@ -114,6 +109,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
 });
 
 // Start server
-const listener = app.listen(3000, () => {
-  console.log('Your app is listening on port ' + listener.address().port);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Your app is listening on port ${PORT}`);
 });
