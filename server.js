@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 
 // Models
@@ -12,13 +11,16 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-// Connect to local MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected locally!'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected!'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // Root route
 app.get('/', (req, res) => {
@@ -89,7 +91,9 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     if (from) query.date.$gte = new Date(from);
     if (to) query.date.$lte = new Date(to);
 
-    let exercises = await Exercise.find(query).limit(Number(limit) || 0);
+    let exercises = await Exercise.find(query)
+      .sort({ date: 1 })
+      .limit(Number(limit) || 0);
 
     const log = exercises.map(e => ({
       description: e.description,
@@ -106,6 +110,8 @@ app.get('/api/users/:_id/logs', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Unable to fetch logs' });
   }
+  console.log('Connecting to MongoDB URI:', process.env.MONGO_URI);
+
 });
 
 // Start server
